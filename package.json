@@ -6,11 +6,11 @@
   "scripts": {
     "lint": "npx eslint .",
     "test": "jest --coverage",
-    "build": "mkdir -p dist && cp -r src dist",
+    "build": "rm -rf dist && mkdir dist && cp -r src/* dist/",
     "start": "node dist/server.js"
   },
   "keywords": ["health-check", "monitoring", "ci", "devops", "express"],
-  "author": "Your Name",
+  "author": "yesgallo",
   "license": "MIT",
   "dependencies": {
     "express": "^4.19.2"

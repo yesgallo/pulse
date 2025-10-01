@@ -32,4 +32,58 @@ git clone https://github.com/yesgallo/pulse.git
 cd pulse
 npm install
 
+### Run
 
+```bash
+npm start
+# Servidor escuchando en http://localhost:3000
+
+### Test Health Endpoint
+
+```bash
+curl http://localhost:3000/health
+
+### Response:
+
+```bash
+{
+  "status": "ok",
+  "timestamp": "2025-09-17T15:00:00.000Z"
+}
+
+---
+
+### 🧪 Testing
+# Run linting and tests:
+
+```bash
+npm run lint
+npm test
+
+Coverage reports are generated in the coverage/ folder.
+
+---
+
+## 🔄 CI/CD
+This project includes a GitHub Actions workflow (/.github/workflows/ci.yml) that:
+
+Runs on every push and pull_request to main
+Lints the code
+Executes unit tests with coverage
+Builds the dist/ folder
+Uploads artifacts (coverage, dist)
+(Optional) Sends coverage to Codecov
+The main branch is protected: merges are only allowed if all CI checks pass.
+
+---
+
+## 📦 Build
+
+npm run build
+
+Outputs a dist/ folder ready for deployment.
+
+---
+
+## 📄 License
+MIT © [yesgallo]
