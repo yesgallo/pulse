@@ -1,0 +1,33 @@
+{
+  "name": "pulse",
+  "version": "1.0.0",
+  "description": "Lightweight health-check service for CI/CD and monitoring",
+  "main": "dist/server.js",
+  "scripts": {
+    "lint": "npx eslint .",
+    "test": "jest --coverage",
+    "build": "mkdir -p dist && cp -r src dist",
+    "start": "node dist/server.js"
+  },
+  "keywords": ["health-check", "monitoring", "ci", "devops", "express"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.10",
+    "@types/supertest": "^6.0.2",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coverageReporters": ["text", "lcov", "html"]
+  }
+}
