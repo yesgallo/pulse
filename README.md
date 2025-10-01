@@ -86,4 +86,4 @@ Outputs a dist/ folder ready for deployment.
 ---
 
 ## 📄 License
-MIT © [yesgallo]
+MIT © [yesgallo]// prueba de protección
