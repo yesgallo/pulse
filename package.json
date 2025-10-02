@@ -2,14 +2,17 @@
   "name": "pulse",
   "version": "1.0.0",
   "description": "Lightweight health-check service for CI/CD and monitoring",
-  "main": "dist/server.js",
-  "scripts": {
-    "lint": "npx eslint .",
-    "test": "jest --coverage",
-    "build": "rm -rf dist && mkdir dist && cp -r src/* dist/",
-    "start": "node dist/server.js"
-  },
-  "keywords": [
+"main": "dist/server.js",
+"scripts": {
+  "dev": "node src/server.js",
+  "start": "node dist/server.js",
+  "build": "rm -rf dist && mkdir dist && cp -r src/* dist/",
+  "lint": "npx eslint .",
+  "test": "jest --coverage",
+  "test:watch": "jest --watch",
+  "redis": "docker-compose up -d redis"
+},
+"keywords": [
     "health-check",
     "monitoring",
     "ci",
@@ -19,7 +22,8 @@
   "author": "yesgallo",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "redis": "^5.8.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
