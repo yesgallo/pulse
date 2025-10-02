@@ -1,0 +1,13 @@
+# render.yaml
+services:
+  - type: web
+    name: pulse
+    env: node
+    region: oregon
+    buildCommand: "npm install && npm run build"
+    startCommand: "node dist/server.js"
+    envVars:
+      - key: REDIS_URL
+        fromDatabase:
+          name: pulse-redis
+          property: connectionString
