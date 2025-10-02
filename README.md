@@ -85,5 +85,19 @@ Outputs a dist/ folder ready for deployment.
 
 ---
 
+## 📡 Endpoints
+
+### `GET /health`
+- Verifica que el servicio está activo.
+- **Sin dependencia de Redis**.
+- Ideal para liveness probes.
+
+### `GET /ping`
+- Verifica el servicio y **guarda metadata del request en Redis**.
+- Incluye: IP, User-Agent, timestamp.
+- Ideal para readiness probes o monitoreo avanzado.
+
+---
+
 ## 📄 License
 MIT © [yesgallo]// prueba de protección
