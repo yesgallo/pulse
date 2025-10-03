@@ -1,18 +1,21 @@
 
 const request = require('supertest');
 const app = require('../src/app');
-const { client } = require('../src/redis');
+const { createClient } = require('redis');
+
+
+const testClient = createClient({
+  url: 'redis://localhost:6379',
+});
 
 describe('GET /ping', () => {
   beforeAll(async () => {
-    // Asegura que Redis esté conectado
-    if (!client.isOpen) {
-      await client.connect();
-    }
+    await testClient.connect();
   });
 
   afterAll(async () => {
-    await client.quit();
+    await testClient.flushAll(); 
+    await testClient.quit();
   });
 
   it('debe responder con status 200 y guardar en Redis', async () => {
@@ -24,8 +27,8 @@ describe('GET /ping', () => {
     expect(response.body).toHaveProperty('status', 'pong');
     expect(response.body).toHaveProperty('saved', true);
 
-    // Verificar que se guardó en Redis
-    const keys = await client.keys('ping:*');
+    
+    const keys = await testClient.keys('ping:*');
     expect(keys.length).toBeGreaterThan(0);
   });
 
@@ -34,5 +37,25 @@ describe('GET /ping', () => {
     await request(app).get('/ping');
     const duration = Date.now() - start;
     expect(duration).toBeLessThan(100);
+  });
+});
+
+describe('GET /responses', () => {
+  beforeAll(async () => {
+    if (!testClient.isOpen) await testClient.connect();
+  });
+
+  afterAll(async () => {
+    await testClient.flushAll();
+    await testClient.quit();
+  });
+
+  it('debe devolver todos los pings guardados', async () => {
+    await request(app).get('/ping');
+    const response = await request(app).get('/responses').expect(200);
+    expect(response.body).toHaveProperty('count');
+    expect(response.body).toHaveProperty('responses');
+    expect(Array.isArray(response.body.responses)).toBe(true);
+    expect(response.body.count).toBeGreaterThan(0);
   });
 });
