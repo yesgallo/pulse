@@ -1,103 +1,149 @@
 # 🩺 Pulse
 
-> **Lightweight health-check service for CI/CD pipelines, orchestration, and monitoring**
+> **Servicio ligero de monitoreo con registro de pings en Redis**  
+> Ideal para pipelines de CI/CD, pruebas de integración y verificación de salud de sistemas.
 
-`pulse` is a minimal Express.js service that exposes a `/health` endpoint to verify that your application is running. It’s designed to be used in:
-
-- Kubernetes liveness/readiness probes  
-- GitHub Actions or any CI/CD pipeline  
-- Infrastructure monitoring tools (Prometheus, Datadog, etc.)  
-- Microservice architectures requiring a standard health check
-
-Fast, dependency-free, and production-ready.
+`pulse` es un microservicio minimalista que expone endpoints para verificar la disponibilidad de un servicio y registrar metadata de requests en Redis. Todo funciona **localmente**, sin necesidad de despliegue en la nube.
 
 ---
 
-## ✅ Features
+## ✅ Funcionalidades
 
-- **Lightweight**: No external dependencies beyond Express.
-- **Fast**: Responds in < 10ms under normal conditions.
-- **Standard**: Returns `200 OK` with JSON `{ "status": "ok", "timestamp": "..." }`.
-- **CI/CD Ready**: Includes linting, unit tests, coverage, and build pipeline.
-- **No DB, no auth**: Pure in-memory health check.
+- **`GET /health`**: Verifica que el servicio está activo (sin dependencia de Redis).
+- **`GET /ping`**: Registra metadata del request (IP, User-Agent, timestamp) en Redis y responde con `"pong"`.
+- **`GET /responses`**: Devuelve todos los pings guardados en Redis (ordenados por fecha más reciente).
+
+✅ **Características clave**:
+- Respuestas en **menos de 100ms**
+- Persistencia en **Redis con expiración automática (1 hora)**
+- **100% local y reproducible**
+- Incluye **pruebas automatizadas y pipeline de CI**
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Ejecución Local
 
-### Install
+### Requisitos
+- Node.js v18+
+- Docker (para Redis)
 
-```bash
-git clone https://github.com/yesgallo/pulse.git
-cd pulse
-npm install
+### Pasos
 
-### Run
 
-```bash
-npm start
-# Servidor escuchando en http://localhost:3000
 
-### Test Health Endpoint
+1. **Instalar dependencias**
 
 ```bash
+  npm install 
+```
+
+2. **Levantar Redis**
+
+```bash
+  npm run redis 
+```
+
+3. **Iniciar la app**
+
+```bash
+  npm run dev
+```
+
+4. **Probar los endpoints**
+
+```bash
+    # Verificar salud
 curl http://localhost:3000/health
 
-### Response:
+    # Hacer pings (se guardan en Redis)
+curl http://localhost:3000/ping
+curl http://localhost:3000/ping
+
+    # Ver todos los registros
+curl http://localhost:3000/responses
+```
+
+5. **✅ Ejemplo de respuesta en /responses:**
 
 ```bash
 {
-  "status": "ok",
-  "timestamp": "2025-09-17T15:00:00.000Z"
+  "count": 2,
+  "responses": [
+    {
+      "timestamp": "2025-10-03T15:30:00.000Z",
+      "ip": "::1",
+      "userAgent": "curl/8.4.0",
+      "path": "/ping"
+    },
+    {
+      "timestamp": "2025-10-03T15:29:00.000Z",
+      "ip": "::1",
+      "userAgent": "curl/8.4.0",
+      "path": "/ping"
+    }
+  ]
 }
+```
 
----
+6. **Pruebas**
 
-### 🧪 Testing
-# Run linting and tests:
+Ejecuta las pruebas automatizadas (incluyen cobertura):
 
 ```bash
-npm run lint
-npm test
+  npm test
+```
+✅ Verás:
+Todos los tests pasan
+Cobertura 100% en lógica crítica
+Tiempos de respuesta < 100ms
 
-Coverage reports are generated in the coverage/ folder.
 
----
+## 🔄 Pipeline de CI/CD
 
-## 🔄 CI/CD
-This project includes a GitHub Actions workflow (/.github/workflows/ci.yml) that:
+Este proyecto incluye un workflow de GitHub Actions que:
+Se ejecuta en cada push y pull_request a main
+Ejecuta linting, tests (con Redis embebido) y build
+Sube artifacts (reportes de cobertura, resultados de tests)
+Protege la rama main: solo se puede mergear si el CI pasa
+💡 El pipeline garantiza que todo el código cumple con estándares de calidad antes de integrarse. 
 
-Runs on every push and pull_request to main
-Lints the code
-Executes unit tests with coverage
-Builds the dist/ folder
-Uploads artifacts (coverage, dist)
-(Optional) Sends coverage to Codecov
-The main branch is protected: merges are only allowed if all CI checks pass.
+## 📁 Arquitectura
 
----
+```bash
+Cliente
+   │
+   ▼
+Express (src/app.js)
+   ├── /health → Respuesta inmediata
+   ├── /ping → Guarda en Redis → Responde
+   └── /responses → Lee de Redis → Responde
+   │
+   ▼
+Redis (vía src/redis.js)
+```
 
-## 📦 Build
+Patrón: Arquitectura en capas (presentación → lógica → datos)
+Bajo acoplamiento: /health no depende de Redis
+Extensible: Fácil de añadir métricas, autenticación, etc.
 
-npm run build
+## 🛠️ Scripts Disponibles
 
-Outputs a dist/ folder ready for deployment.
+**npm run dev** > Inicia la app en modo desarrollo
 
----
+**npm run redis** > Levanta Redis con Docker
 
-## 📡 Endpoints
+**npm run redis:down** > Detiene Redis
 
-### `GET /health`
-- Verifica que el servicio está activo.
-- **Sin dependencia de Redis**.
-- Ideal para liveness probes.
+**npm test** > Ejecuta pruebas con cobertura
 
-### `GET /ping`
-- Verifica el servicio y **guarda metadata del request en Redis**.
-- Incluye: IP, User-Agent, timestamp.
-- Ideal para readiness probes o monitoreo avanzado.
+**npm run lint** > Valida estilo de código
 
----
 
-## 📄 License
-MIT © [yesgallo]// prueba de protección
+## 📦 Dependencias
+
+**Producción:** express, redis
+**Desarrollo:** jest, supertest, eslint
+
+## 📄 Licencia
+
+MIT © [yesgallo]

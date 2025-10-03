@@ -1,13 +1,11 @@
-// src/app.js
+
 const express = require('express');
-const { client, connectRedis } = require('./redis');
+const { client } = require('./redis');
 
 const app = express();
 
-// Middleware para parsear JSON (por si en el futuro se usa)
 app.use(express.json());
 
-// Endpoint /health (sin Redis)
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -15,7 +13,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Endpoint /ping (con Redis)
 app.get('/ping', async (req, res) => {
   const pingData = {
     timestamp: new Date().toISOString(),
@@ -25,27 +22,30 @@ app.get('/ping', async (req, res) => {
   };
 
   try {
-    // Guardar en Redis con clave "ping:<timestamp>"
     const key = `ping:${pingData.timestamp}`;
-    await client.set(key, JSON.stringify(pingData), {
-      EX: 3600, // Expira en 1 hora
-    });
-
-    res.status(200).json({
-      status: 'pong',
-      timestamp: pingData.timestamp,
-      saved: true,
-    });
+    await client.set(key, JSON.stringify(pingData), { EX: 3600 });
+    res.status(200).json({ status: 'pong', timestamp: pingData.timestamp, saved: true });
   } catch (error) {
     console.error('Error al guardar en Redis:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'No se pudo guardar en Redis',
-    });
+    res.status(500).json({ status: 'error', message: 'No se pudo guardar en Redis' });
   }
 });
 
-// Conectar Redis al iniciar
-connectRedis().catch(console.error);
+app.get('/responses', async (req, res) => {
+  try {
+    const keys = await client.keys('ping:*');
+    const pings = [];
+    for (const key of keys) {
+      const data = await client.get(key);
+      if (data) pings.push(JSON.parse(data));
+    }
+  
+    pings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    res.status(200).json({ count: pings.length, responses: pings });
+  } catch (error) {
+    console.error('Error al leer de Redis:', error);
+    res.status(500).json({ status: 'error', message: 'No se pudo leer de Redis' });
+  }
+});
 
 module.exports = app;
