@@ -1,12 +1,24 @@
-
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { client } = require('./redis');
 const validateToken = require('./middleware/validateToken');
 
 const app = express();
 app.use(express.json());
 
-// ✅ /health → sin autenticación
+// Rate limiter para endpoints sensibles (acceso a Redis)
+const redisLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 peticiones por IP en 15 minutos
+  message: { 
+    status: 'error', 
+    message: 'Too many requests, please try again later.' 
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ✅ /health → sin autenticación ni rate limiting
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -14,7 +26,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ✅ /ping → sin autenticación
+// ✅ /ping → sin autenticación ni rate limiting
 app.get('/ping', async (req, res) => {
   const pingData = {
     timestamp: new Date().toISOString(),
@@ -33,8 +45,8 @@ app.get('/ping', async (req, res) => {
   }
 });
 
-// /responses → requiere token
-app.get('/responses', validateToken, async (req, res) => {
+// 🔒 /responses (GET) → con token + rate limiting
+app.get('/responses', validateToken, redisLimiter, async (req, res) => {
   try {
     const keys = await client.keys('ping:*');
     const pings = [];
@@ -50,8 +62,8 @@ app.get('/responses', validateToken, async (req, res) => {
   }
 });
 
-// DELETE /responses → elimina todos los pings
-app.delete('/responses', validateToken, async (req, res) => {
+// 🔒 DELETE /responses → con token + rate limiting
+app.delete('/responses', validateToken, redisLimiter, async (req, res) => {
   try {
     const keys = await client.keys('ping:*');
     if (keys.length > 0) {
