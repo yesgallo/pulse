@@ -1,0 +1,17 @@
+### 1. Health check (sin autenticación)
+GET http://localhost:3000/health
+
+### 2. Ping (sin autenticación)
+GET http://localhost:3000/ping
+
+### 3. Listar respuestas (con token)
+GET http://localhost:3000/responses
+Authorization: Bearer eyJhbGciOiJub25lIn0.eyJ1c2VyIjoiYWRtaW4ifQ.
+
+### 4. Eliminar todas las respuestas (con token)
+DELETE http://localhost:3000/responses
+Authorization: Bearer eyJhbGciOiJub25lIn0.eyJ1c2VyIjoiYWRtaW4ifQ.
+
+### 5. Verificar que está vacío
+GET http://localhost:3000/responses
+Authorization: Bearer eyJhbGciOiJub25lIn0.eyJ1c2VyIjoiYWRtaW4ifQ.
