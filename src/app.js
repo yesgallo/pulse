@@ -6,13 +6,13 @@ const validateToken = require('./middleware/validateToken');
 const app = express();
 app.use(express.json());
 
-// Rate limiter para endpoints sensibles (acceso a Redis)
+// Rate limiter para endpoints sensibles (solo después de autenticación)
 const redisLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 100, // máximo 100 peticiones por IP en 15 minutos
-  message: { 
-    status: 'error', 
-    message: 'Too many requests, please try again later.' 
+  message: {
+    status: 'error',
+    message: 'Too many requests, please try again later.'
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -45,7 +45,7 @@ app.get('/ping', async (req, res) => {
   }
 });
 
-// 🔒 /responses (GET) → con token + rate limiting
+// 🔒 GET /responses → autenticación + rate limiting
 app.get('/responses', validateToken, redisLimiter, async (req, res) => {
   try {
     const keys = await client.keys('ping:*');
@@ -62,7 +62,7 @@ app.get('/responses', validateToken, redisLimiter, async (req, res) => {
   }
 });
 
-// 🔒 DELETE /responses → con token + rate limiting
+// 🔒 DELETE /responses → autenticación + rate limiting
 app.delete('/responses', validateToken, redisLimiter, async (req, res) => {
   try {
     const keys = await client.keys('ping:*');
